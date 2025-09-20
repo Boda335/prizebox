@@ -32,12 +32,7 @@ jobs:
 
       - name: Update package.json version if needed
         run: |
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-          if [ "$CURRENT_VERSION" != "$PACKAGE_VERSION" ]; then
-            npm version $PACKAGE_VERSION --no-git-tag-version
-          else
-            echo "Version is already $PACKAGE_VERSION, skipping..."
-          fi
+          npm version $PACKAGE_VERSION --no-git-tag-version || echo "Version is already $PACKAGE_VERSION, skipping..."
 
       - name: Publish to npm
         run: npm publish
