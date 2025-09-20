@@ -11,6 +11,7 @@ describe('GiveawaysManager', () => {
   let mockClient: any;
 
   beforeEach(() => {
+    jest.useFakeTimers(); 
     mockGuild = createMockGuild();
     mockMessage = createMockMessage();
     mockChannel = createMockChannel(mockGuild, mockMessage);
@@ -26,10 +27,15 @@ describe('GiveawaysManager', () => {
         type: 'reaction',
         emoji: '🎉',
       },
+      isTest: true 
     });
+
+    manager['collectors'].forEach((c: any) => c.stop?.());
+    manager['collectors'].clear();
   });
 
-  afterAll(() => {
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
 

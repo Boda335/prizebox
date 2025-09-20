@@ -136,4 +136,7 @@ export interface ManagerOptions {
     /** Text to display for infinite duration paused giveaways */
     infiniteDurationText?: string;
   };
+
+  /** Whether to run in test mode */
+  isTest?: boolean;
 }
