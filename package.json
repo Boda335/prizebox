@@ -46,6 +46,7 @@
     "discord.js": "^14.13.0"
   },
   "files": [
+    "src",
     "dist",
     "README.md",
     "LICENSE"
