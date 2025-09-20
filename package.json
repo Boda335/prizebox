@@ -4,6 +4,7 @@
   "description": "Complete Discord giveaway management system with advanced features and statistics tracking",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
