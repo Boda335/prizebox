@@ -23,6 +23,11 @@ export const createMockGuild = () => ({
   name: 'Test Guild',
   iconURL: jest.fn<() => string>().mockReturnValue('http://discord.test/icon.png'),
 });
+const mockUser = {
+  id: 'user_1',
+  username: 'TestUser',
+  displayAvatarURL: jest.fn(() => 'http://discord.test/avatar.png'),
+};
 
 export const createMockMessage = () => {
   const collector = createMockCollector();
@@ -34,6 +39,18 @@ export const createMockMessage = () => {
     edit: mockFn(true),
     react: mockFn(true),
     createReactionCollector: jest.fn(() => collector),
+    reactions: {
+      cache: new Map<string, any>([
+        [
+          '🎉',
+          {
+            users: {
+              fetch: jest.fn(async () => new Map([['user_1', mockUser]])),
+            },
+          },
+        ],
+      ]),
+    },
   };
 };
 
