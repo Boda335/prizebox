@@ -1,6 +1,6 @@
 {
   "name": "prizebox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Complete Discord giveaway management system with advanced features and statistics tracking",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
