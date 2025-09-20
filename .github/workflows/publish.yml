@@ -5,25 +5,41 @@ on:
     types: [published]
 
 jobs:
-  publish:
+  build-and-publish:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 18
-        registry-url: https://registry.npmjs.org/
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: https://registry.npmjs.org/
 
-    - name: Get version from tag
-      run: echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+      - name: Get version from tag
+        run: echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
 
-    - name: Update package.json version
-      run: npm version $PACKAGE_VERSION --no-git-tag-version
+      - name: Install dependencies
+        run: npm ci
 
-    - run: npm ci
-    - run: npm run build
+      - name: Lint code
+        run: npm run lint
 
-    - run: npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+      - name: Build project
+        run: npm run build
+
+      - name: Update package.json version if needed
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          if [ "$CURRENT_VERSION" != "$PACKAGE_VERSION" ]; then
+            npm version $PACKAGE_VERSION --no-git-tag-version
+          else
+            echo "Version is already $PACKAGE_VERSION, skipping..."
+          fi
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
