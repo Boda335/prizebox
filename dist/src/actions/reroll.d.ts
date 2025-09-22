@@ -6,5 +6,5 @@ import { GiveawaysManager } from '../GiveawaysManager';
  * @param winnerCount Optional number of winners (defaults to the original count)
  * @returns The new winners as an array of participants
  */
-export declare function rerollGiveaway(manager: GiveawaysManager, messageId: string, winnerCount?: number): Promise<import("../types").Participant[]>;
+export declare function rerollGiveaway(manager: GiveawaysManager, messageId: string, winnerCount?: number): Promise<import("..").Participant[]>;
 //# sourceMappingURL=reroll.d.ts.map

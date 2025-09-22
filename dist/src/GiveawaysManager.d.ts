@@ -12,7 +12,9 @@ export interface GiveawayEvents {
     /** When a participant leaves a giveaway */
     giveawayLeave: (participant: Participant, giveaway: Giveaway) => void;
     /** When a user tries to enter but fails validation */
-    giveawayInvalidEntry: (userId: string, giveaway: Giveaway) => void;
+    giveawayInvalidEntry: (participant: Participant, giveaway: Giveaway, reason: string) => void;
+    /** When a participant wins a giveaway */
+    giveawayWin: (winners: Participant[], giveaway: Giveaway) => void;
 }
 /**
  * EventEmitter typings for GiveawaysManager
