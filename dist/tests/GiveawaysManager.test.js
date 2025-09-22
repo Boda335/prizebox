@@ -11,6 +11,7 @@ describe('GiveawaysManager', () => {
     let mockChannel;
     let mockClient;
     beforeEach(() => {
+        globals_1.jest.useFakeTimers();
         mockGuild = (0, utils_1.createMockGuild)();
         mockMessage = (0, utils_1.createMockMessage)();
         mockChannel = (0, utils_1.createMockChannel)(mockGuild, mockMessage);
@@ -25,9 +26,13 @@ describe('GiveawaysManager', () => {
                 type: 'reaction',
                 emoji: '🎉',
             },
+            isTest: true
         });
+        manager['collectors'].forEach((c) => c.stop?.());
+        manager['collectors'].clear();
     });
-    afterAll(() => {
+    afterEach(() => {
+        globals_1.jest.runOnlyPendingTimers();
         globals_1.jest.useRealTimers();
     });
     test('should create a new giveaway', async () => {

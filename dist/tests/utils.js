@@ -25,6 +25,11 @@ const createMockGuild = () => ({
     iconURL: globals_1.jest.fn().mockReturnValue('http://discord.test/icon.png'),
 });
 exports.createMockGuild = createMockGuild;
+const mockUser = {
+    id: 'user_1',
+    username: 'TestUser',
+    displayAvatarURL: globals_1.jest.fn(() => 'http://discord.test/avatar.png'),
+};
 const createMockMessage = () => {
     const collector = (0, exports.createMockCollector)();
     return {
@@ -34,6 +39,18 @@ const createMockMessage = () => {
         edit: (0, exports.mockFn)(true),
         react: (0, exports.mockFn)(true),
         createReactionCollector: globals_1.jest.fn(() => collector),
+        reactions: {
+            cache: new Map([
+                [
+                    '🎉',
+                    {
+                        users: {
+                            fetch: globals_1.jest.fn(async () => new Map([['user_1', mockUser]])),
+                        },
+                    },
+                ],
+            ]),
+        },
     };
 };
 exports.createMockMessage = createMockMessage;

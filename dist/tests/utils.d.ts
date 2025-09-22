@@ -20,6 +20,9 @@ export declare const createMockMessage: () => {
         emit: (event: string, ...args: any[]) => void;
         stop: import("jest-mock").Mock<import("jest-mock").UnknownFunction>;
     }>;
+    reactions: {
+        cache: Map<string, any>;
+    };
 };
 export declare const createMockChannel: (guild: any, message: any) => {
     id: string;

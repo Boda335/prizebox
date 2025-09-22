@@ -12,4 +12,6 @@ export { GiveawaysManager } from './GiveawaysManager';
  * import { Giveaway } from 'your-package';
  */
 export { Giveaway } from './Giveaway';
+export type { GiveawayEvents } from './GiveawaysManager';
+export type { ManagerOptions, Participant } from './types';
 //# sourceMappingURL=index.d.ts.map

@@ -27,7 +27,15 @@ export class Giveaway {
   addParticipant(user: User) {
     // Bots cannot win if disabled
     if (user.bot && !this.manager.defaults.botsCanWin) {
-      this.manager.emit('giveawayInvalidEntry', user.id, this);
+      const participant: Participant = {
+        id: user.id,
+        username: user.username,
+        globalName: user.globalName,
+        avatar: user.displayAvatarURL(),
+      };
+
+      this.manager.emit('giveawayInvalidEntry', participant, this, 'botsNotAllowed');
+
       return;
     }
 
