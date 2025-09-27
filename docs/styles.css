@@ -1,0 +1,79 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    /* Make background color between white and black */
+    background-color:#0d1117;
+}
+
+.logo img {
+    height: 30px;
+}
+p {
+    color: #fff;
+        font-size: 1.25rem;
+    font-weight: 300;
+}
+.nav-link {
+    color: #fff;
+}
+
+.hero {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.install-buttons button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+.install-command code {
+    background-color: #343a40;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+}
+
+.feature-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.chart .progress {
+    height: 30px;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.chart .progress-bar {
+    color: #fff;
+    text-align: right;
+    padding-right: 10px;
+}
+
+.chart .row {
+    margin-top: 1rem;
+}
+
+.chart .col-auto {
+    font-weight: bold;
+}
+
+footer {
+    color: #fff;
+}
+
+/* Button without any style */
+.button-cus {
+    background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+}
