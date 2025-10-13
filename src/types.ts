@@ -90,16 +90,50 @@ export interface GiveawayData {
   emoji: string;
   /** Whether the last-chance message has been triggered */
   lastChanceTriggered?: boolean;
+
+  /** Optional custom requirements (roles, guilds, etc.) */
   requirements?: {
     roleId?: string;
     mustBeInGuild?: string;
   };
+
+  /** Optional bonus entries (based on users or roles) */
   bonusEntries?: {
     userId?: string;
     roleId?: string;
     bonus: number;
   }[];
+
+  /** Optional last-chance configuration (overrides manager defaults) */
+  lastChance?: {
+    enabled: boolean;
+    content: string;
+    threshold: number;
+    embedColor: string;
+  };
+  /** Optional custom messages (overrides manager defaults) */
+  messages?: Record<string, string>;
+
+  /** Optional default overrides (for this giveaway only) */
+  defaults?: {
+    botsCanWin?: boolean;
+    embedColor?: string;
+    embedColorEnd?: string;
+    checkInterval?: number;
+    type?: 'reaction' | 'button';
+    emoji?: string;
+  };
+
+  /** Optional pause configuration (overrides manager defaults) */
+  pauseOptions?: {
+    isPaused: boolean;
+    content: string;
+    unpauseAfter: number | null;
+    embedColor: string;
+    infiniteDurationText: string;
+  };
 }
+
 
 /**
  * Options for configuring the giveaway manager.

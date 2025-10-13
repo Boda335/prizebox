@@ -4,7 +4,7 @@ import { Giveaway } from './Giveaway';
 import { JsonStorage } from './storage/JsonStorage';
 import { ManagerOptions, Participant } from './types';
 
-// Actions for giveaways
+// Giveaway actions
 import { deleteGiveaway } from './actions/delete';
 import { editGiveaway } from './actions/edit';
 import { endGiveaway } from './actions/end';
@@ -16,35 +16,19 @@ import { resumeGiveaway } from './actions/resume';
 import { startGiveaway } from './actions/start';
 import { generateTranscript } from './actions/transcript';
 
-// Collectors to handle reactions or buttons
+// Collectors
 import { createCollectorForGiveaway } from './collectors/createCollectorForGiveaway';
 import { restoreCollectors } from './collectors/restoreCollectors';
 import { syncParticipantsFromReactions } from './collectors/syncParticipants';
 
-/**
- * Events emitted by the GiveawaysManager
- */
 export interface GiveawayEvents {
-  /** When a participant successfully joins a giveaway */
   participantJoined: (participant: Participant, giveaway: Giveaway) => void;
-
-  /** When a participant leaves a giveaway */
   participantLeft: (participant: Participant, giveaway: Giveaway) => void;
-
-  /** When a user fails to enter the giveaway due to missing requirements */
   entryFailed: (participant: Participant, giveaway: Giveaway, reason: string | { code: 'notInRequiredGuild'; guildName?: string; inviteURL?: string; guildIcon?: string } | { code: 'invalidInvite'; inviteURL?: string } | { code: 'missingRequiredRole'; roleId: string }) => void;
-
-  /** When one or more participants win a giveaway */
   giveawayWon: (winners: Participant[], giveaway: Giveaway) => void;
-
-  /** When a giveaway is rerolled */
   giveawayRerolled: (newWinners: Participant[], giveaway: Giveaway) => void;
-
-  /** When a giveaway ends (naturally or manually stopped) */
   entryAfterEnd: (participant: Participant, giveaway: Giveaway) => void;
 }
-
-//EventEmitter typings for GiveawaysManager
 
 export declare interface GiveawaysManager {
   on<U extends keyof GiveawayEvents>(event: U, listener: GiveawayEvents[U]): this;
@@ -53,15 +37,12 @@ export declare interface GiveawaysManager {
   emit<U extends keyof GiveawayEvents>(event: U, ...args: Parameters<GiveawayEvents[U]>): boolean;
 }
 
-// Main class for managing giveaways
-
 export class GiveawaysManager extends EventEmitter {
-  public client: Client; // Discord client instance
-  public storage: JsonStorage; // Storage handler for giveaways
-  public giveaways: Giveaway[] = []; // Array of all giveaways
-  private collectors: Map<string, any> = new Map(); // Active collectors for giveaways
+  public client: Client;
+  public storage: JsonStorage;
+  public giveaways: Giveaway[] = [];
+  private collectors: Map<string, any> = new Map();
 
-  // Default settings for giveaways
   public defaults: {
     botsCanWin: boolean;
     embedColor: ColorResolvable;
@@ -71,7 +52,7 @@ export class GiveawaysManager extends EventEmitter {
     emoji: string;
   };
 
-  public messages: Record<string, string>; // Messages for giveaway notifications
+  public messages: Record<string, string>;
   public lastChance?: {
     enabled: boolean;
     content: string;
@@ -86,17 +67,12 @@ export class GiveawaysManager extends EventEmitter {
     infiniteDurationText: string;
   };
 
-  /**
-   * Constructor
-   * @param client Discord client
-   * @param options Manager configuration options
-   */
   constructor(client: Client, options: ManagerOptions) {
     super();
     this.client = client;
     this.storage = new JsonStorage(options.storage);
 
-    // Set default options with fallback values
+    // Default giveaway options
     this.defaults = {
       botsCanWin: options.defaults?.botsCanWin ?? false,
       embedColor: options.defaults?.embedColor ?? '#FF0000',
@@ -106,7 +82,7 @@ export class GiveawaysManager extends EventEmitter {
       emoji: options.defaults?.emoji ?? '🎉',
     };
 
-    // Default messages
+    // Default messages for giveaways
     this.messages = options.messages ?? {
       giveaway: '🎉 Giveaway 🎉',
       giveawayEnded: '🎉 Giveaway Ended 🎉',
@@ -123,7 +99,7 @@ export class GiveawaysManager extends EventEmitter {
       leaveGiveaway: 'You left the giveaway!',
     };
 
-    // Last chance settings
+    // Last chance options
     this.lastChance = {
       enabled: options.lastChance?.enabled ?? true,
       content: options.lastChance?.content ?? '⚠️ **LAST CHANCE TO ENTER !** ⚠️',
@@ -140,21 +116,18 @@ export class GiveawaysManager extends EventEmitter {
       infiniteDurationText: options.pauseOptions?.infiniteDurationText ?? '`NEVER`',
     };
 
-    // Load all giveaways from storage
+    // Load existing giveaways from storage
     this.giveaways = this.storage.all().map(g => new Giveaway(g, this));
 
-    // Check giveaways periodically
+    // Regularly check for ending giveaways
     setInterval(() => this.checkGiveaways(), this.defaults.checkInterval);
 
-    // Restore collectors after initialization
+    // Restore collectors after bot restart
     setTimeout(() => restoreCollectors(this), 5000);
   }
 
-  /**
-   * Start a new giveaway
-   */
   async start(channel: TextChannel, options: any, managerOverrides?: Partial<ManagerOptions>) {
-    // Merge defaults and overrides
+    // Merge default settings with overrides
     const mergedDefaults = { ...this.defaults, ...managerOverrides?.defaults };
     const mergedLastChance = {
       enabled: managerOverrides?.lastChance?.enabled ?? this.lastChance?.enabled ?? true,
@@ -171,38 +144,50 @@ export class GiveawaysManager extends EventEmitter {
     };
     const mergedMessages = managerOverrides?.messages ?? this.messages;
 
+    // Create a temporary manager instance
     const tempManager = Object.create(this) as GiveawaysManager;
+
+    // Apply custom settings
     tempManager.defaults = mergedDefaults;
     tempManager.lastChance = mergedLastChance;
     tempManager.pauseOptions = mergedPauseOptions;
     tempManager.messages = mergedMessages;
 
+    // If server has custom storage, use it
+    if (managerOverrides) {
+      const guildId = (channel.guild?.id || 'global').toString();
+      const storagePath = `./giveaways/${guildId}.json`; // Can switch to MongoStorage if needed
+      tempManager.storage = new JsonStorage(storagePath);
+    }
+
+    // Determine type and emoji for giveaway
     const giveawayType = options.type ?? tempManager.defaults.type;
     const giveawayEmoji = options.emoji ?? tempManager.defaults.emoji;
 
-    return startGiveaway(tempManager, channel, {
+    // Start the giveaway with server-specific settings
+    const giveaway = await startGiveaway(tempManager, channel, {
       ...options,
       type: giveawayType,
       emoji: giveawayEmoji,
     });
+
+    // Save giveaway to server storage
+    tempManager.save();
+
+    return giveaway;
   }
 
-  /** End a giveaway */
   async end(messageId: string) {
-    // this.removeCollector(messageId);
     return endGiveaway(this, messageId);
   }
 
-  /** Pause a giveaway */
   pause(messageId: string) {
     this.removeCollector(messageId);
     return pauseGiveaway(this, messageId);
   }
 
-  /** Resume a paused giveaway */
   async resume(messageId: string, newEndAt?: number) {
     const result = await resumeGiveaway(this, messageId, newEndAt);
-
     const giveaway = this.giveaways.find(g => g.data.messageId === messageId);
     if (giveaway && !giveaway.data.ended) {
       try {
@@ -215,41 +200,34 @@ export class GiveawaysManager extends EventEmitter {
         console.error(`Failed to recreate collector after resume:`, error);
       }
     }
-
     return result;
   }
 
-  /** Edit giveaway details */
   edit(messageId: string, options: { prize?: string; winnerCount?: number; addTime?: number }) {
     return editGiveaway(this, messageId, options);
   }
 
-  /** Delete a giveaway */
   delete(messageId: string) {
     this.removeCollector(messageId);
     return deleteGiveaway(this, messageId);
   }
 
-  /** List giveaways by status */
   list(status?: 'active' | 'paused' | 'ended') {
     return listGiveaways(this, status);
   }
 
-  /** Reroll winners */
   reroll(messageId: string, winnerCount?: number) {
     return rerollGiveaway(this, messageId, winnerCount);
   }
 
-  /** Get leaderboard */
   leaderboard(type: 'entries' | 'wins' = 'entries', top = 10) {
     return getLeaderboard(this, type, top);
   }
 
-  /** Send leaderboard to a channel */
   sendLeaderboard(channel: TextChannel, type: 'entries' | 'wins' = 'entries', top = 10) {
     return sendLeaderboard(this, channel, type, top);
   }
-  /** Generate transcript for a giveaway (HTML) */
+
   async generateTranscript(messageId: string, outputDir?: string) {
     try {
       const filePath = await generateTranscript(this, messageId, { outputDir });
@@ -260,23 +238,19 @@ export class GiveawaysManager extends EventEmitter {
     }
   }
 
-  /** Save all giveaways to storage */
   save() {
     this.storage.saveAll(this.giveaways.map(g => g.data));
   }
 
-  /** Create a collector for a giveaway */
   async createCollectorForGiveaway(giveaway: Giveaway, msg: Message) {
     this.removeCollector(giveaway.data.messageId);
     await createCollectorForGiveaway(this, giveaway, msg);
   }
 
-  /** Sync participants from reactions */
   async syncParticipantsFromReactions(giveaway: Giveaway, msg: Message) {
     await syncParticipantsFromReactions(this, giveaway, msg);
   }
 
-  /** Remove active collector */
   private removeCollector(messageId: string) {
     const collector = this.collectors.get(messageId);
     if (collector) {
@@ -285,32 +259,43 @@ export class GiveawaysManager extends EventEmitter {
     }
   }
 
-  /** Periodically check all giveaways */
   private async checkGiveaways() {
     const now = Date.now();
+
     for (const g of this.giveaways) {
       if (g.data.ended || g.data.paused) continue;
 
-      // Last chance notification
-      if (this.lastChance?.enabled && !g.data.lastChanceTriggered && g.data.endAt - now <= this.lastChance.threshold) {
-        try {
-          const channel = this.client.channels.cache.get(g.data.channelId) as TextChannel;
-          if (!channel) continue;
+      try {
+        // Attempt to fetch server-specific settings from database
+        const GuildGiveawaySettings = require('@database/giveawaySchema');
+        const guildSettings = await GuildGiveawaySettings.findOne({ guildId: g.data.guildId }).catch(() => null);
+
+        // Determine lastChance settings by priority
+        const lc = g.data.lastChance ?? guildSettings?.lastChance ?? this.lastChance;
+
+        // Trigger lastChance if enabled and not triggered yet
+        if (lc?.enabled && !g.data.lastChanceTriggered && g.data.endAt - now <= lc.threshold) {
+          const channel = this.client.channels.cache.get(g.data.channelId);
+          if (!channel || !channel.isTextBased()) continue;
+
           const msg = await channel.messages.fetch(g.data.messageId!).catch(() => null);
           if (!msg) continue;
 
-          const embed = EmbedBuilder.from(msg.embeds[0]).setColor(this.lastChance?.embedColor ?? this.defaults.embedColor);
-          await msg.edit({ content: this.lastChance.content, embeds: [embed] });
+          // Use lastChance color from giveaway, server, or default
+          const embedColor = lc.embedColor ?? guildSettings?.lastChance?.embedColor ?? this.defaults.embedColor;
+
+          const embed = EmbedBuilder.from(msg.embeds[0]).setColor(embedColor as ColorResolvable);
+          await msg.edit({ content: lc.content, embeds: [embed] });
 
           g.data.lastChanceTriggered = true;
           this.save();
-        } catch (err) {
-          console.error('Last chance update failed:', err);
         }
-      }
 
-      // End giveaway if time reached
-      if (g.data.endAt <= now) await this.end(g.data.messageId!);
+        // End giveaway if time has passed
+        if (g.data.endAt <= now) await this.end(g.data.messageId!);
+      } catch (err) {
+        console.error('Last chance update failed:', err);
+      }
     }
   }
 }

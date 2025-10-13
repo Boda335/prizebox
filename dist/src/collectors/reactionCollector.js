@@ -12,7 +12,17 @@ exports.createReactionCollector = createReactionCollector;
  */
 async function createReactionCollector(manager, giveaway, msg) {
     // Filter: only allow the giveaway's emoji and ignore bot reactions
-    const filter = (reaction, user) => reaction.emoji.name === giveaway.data.emoji && !user.bot;
+    const filter = (reaction, user) => {
+        if (reaction.emoji.id) {
+            // هذا ايموجي مخصص
+            const customEmojiString = `<${reaction.emoji.animated ? 'a' : ''}:${reaction.emoji.name}:${reaction.emoji.id}>`;
+            return customEmojiString === giveaway.data.emoji && !user.bot;
+        }
+        else {
+            // ايموجي عادية
+            return reaction.emoji.name === giveaway.data.emoji && !user.bot;
+        }
+    };
     // Create the reaction collector with the given filter
     const collector = msg.createReactionCollector({ filter, dispose: true });
     /**

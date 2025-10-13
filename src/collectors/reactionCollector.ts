@@ -12,7 +12,16 @@ import { Message, MessageReaction, User } from 'discord.js';
  */
 export async function createReactionCollector(manager: any, giveaway: Giveaway, msg: Message) {
   // Filter: only allow the giveaway's emoji and ignore bot reactions
-  const filter = (reaction: MessageReaction, user: User) => reaction.emoji.name === giveaway.data.emoji && !user.bot;
+  const filter = (reaction: MessageReaction, user: User) => {
+    if (reaction.emoji.id) {
+      // Custom emoji
+      const customEmojiString = `<${reaction.emoji.animated ? 'a' : ''}:${reaction.emoji.name}:${reaction.emoji.id}>`;
+      return customEmojiString === giveaway.data.emoji && !user.bot;
+    } else {
+      // Standard emoji
+      return reaction.emoji.name === giveaway.data.emoji && !user.bot;
+    }
+  };
 
   // Create the reaction collector with the given filter
   const collector = msg.createReactionCollector({ filter, dispose: true });

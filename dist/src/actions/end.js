@@ -16,57 +16,61 @@ function applyReplacements(template, giveaway, winners, msgUrl) {
 }
 /**
  * Ends a giveaway, selects winners, updates stats, and edits the giveaway message.
- * @param manager The GiveawaysManager instance
- * @param messageId The ID of the giveaway message
  */
 async function endGiveaway(manager, messageId) {
-    // Find the giveaway by its message ID
     const giveaway = manager.giveaways.find(g => g.data.messageId === messageId);
     if (!giveaway)
         throw new Error('Giveaway not found');
     if (giveaway.data.ended)
         return giveaway;
-    // Get the giveaway channel
     const channel = manager.client.channels.cache.get(giveaway.data.channelId);
     if (!channel)
         throw new Error('Channel not found');
-    // Fetch the giveaway message
     const msg = await channel.messages.fetch(messageId).catch(() => null);
     if (!msg)
         throw new Error('Message not found');
-    // Randomly select winners
+    // 🧮 اختيار الفائزين
     const shuffled = [...giveaway.data.participants].sort(() => 0.5 - Math.random());
     const winners = shuffled.slice(0, giveaway.data.winnerCount);
-    // Update giveaway data
     giveaway.data.winnerIds = winners.map(w => w.id);
     giveaway.data.ended = true;
-    // Update user stats for winners
     for (const winner of winners) {
-        manager.storage.updateUserStats(giveaway.data.guildId, winner.id, {
-            wins: 1,
-            entries: 0,
-        });
+        manager.storage.updateUserStats(giveaway.data.guildId, winner.id, { wins: 1, entries: 0 });
     }
-    // Build the final embed
+    // ✅ هنا نحدد الإعدادات الفعلية بناءً على الجيف نفسه
+    const effectiveDefaults = {
+        ...manager.defaults,
+        ...(giveaway.data.defaults ?? {}),
+    };
+    const effectiveMessages = {
+        ...manager.messages,
+        ...(giveaway.data.messages ?? {}),
+    };
+    // 🎨 استخدم لون النهاية من إعدادات الجيف أو الافتراضي
+    const embedColorEnd = (effectiveDefaults.embedColorEnd || '#000000');
+    // 🧱 إنشاء الـ Embed النهائي
     const embed = discord_js_1.EmbedBuilder.from(msg.embeds[0])
         .setTitle(giveaway.data.prize)
-        .setColor(manager.defaults.embedColorEnd)
-        .setDescription(winners.length ? `Winner(s): ${winners.map(w => `<@${w.id}>`).join(', ')}\nHosted by: <@${giveaway.data.hostId}>` : `${applyReplacements(manager.messages.noWinner, giveaway, winners, msg.url)}\nHosted by: <@${giveaway.data.hostId}>`)
+        .setColor(embedColorEnd)
+        .setDescription(winners.length
+        ? `Winner(s): ${winners.map(w => `<@${w.id}>`).join(', ')}\nHosted by: <@${giveaway.data.hostId}>`
+        : `${applyReplacements(effectiveMessages.noWinner, giveaway, winners, msg.url)}\nHosted by: <@${giveaway.data.hostId}>`)
         .setFooter({
-        text: applyReplacements(manager.messages.endedAt, giveaway, winners, msg.url),
+        text: applyReplacements(effectiveMessages.endedAt, giveaway, winners, msg.url),
     })
         .setTimestamp(giveaway.data.endAt);
-    // Edit the giveaway message to show results
+    // 📨 عدّل الرسالة الأصلية
     await msg.edit({
-        content: manager.messages.giveawayEnded,
+        content: effectiveMessages.giveawayEnded,
         embeds: [embed],
         components: [],
     });
-    // Send a win/nowinner message in the channel
+    // 🏆 أرسل رسالة الفائزين / عدم وجود فائزين
     await channel.send({
-        content: winners.length ? applyReplacements(manager.messages.winMessage, giveaway, winners, msg.url) : applyReplacements(manager.messages.noWinner, giveaway, winners, msg.url),
+        content: winners.length
+            ? applyReplacements(effectiveMessages.winMessage, giveaway, winners, msg.url)
+            : applyReplacements(effectiveMessages.noWinner, giveaway, winners, msg.url),
     });
-    // Save the updated state
     manager.save();
     if (winners.length) {
         manager.emit('giveawayWon', winners, giveaway);

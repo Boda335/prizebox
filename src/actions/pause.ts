@@ -3,46 +3,48 @@ import { TextChannel, EmbedBuilder, ColorResolvable } from 'discord.js';
 
 /**
  * Pauses an active giveaway.
- * Updates the giveaway message and marks it as paused in storage.
+ * Uses the giveaway's stored settings if available, otherwise falls back to manager defaults.
+ *
  * @param manager The GiveawaysManager instance
- * @param messageId The ID of the giveaway message
- * @returns The paused Giveaway instance
+ * @param messageId The message ID of the giveaway to pause
+ * @returns The updated Giveaway instance
  */
 export async function pauseGiveaway(manager: GiveawaysManager, messageId: string) {
-  // Find the giveaway by messageId
   const giveaway = manager.giveaways.find(g => g.data.messageId === messageId);
   if (!giveaway) throw new Error('Giveaway not found');
 
-  // If it's already paused, just return it
-  if (giveaway.data.paused) return giveaway;
+  if (giveaway.data.paused) return giveaway; // Already paused
 
-  // Get the giveaway's channel
   const channel = manager.client.channels.cache.get(giveaway.data.channelId) as TextChannel;
   if (!channel) throw new Error('Channel not found');
 
-  // Fetch the giveaway message
   const msg = await channel.messages.fetch(messageId).catch(() => null);
   if (!msg) throw new Error('Message not found');
 
-  const messages = manager.messages;
+  // Use the giveaway's pause options if available, otherwise use manager defaults
+  const pauseOptions = giveaway.data.pauseOptions ?? manager.pauseOptions ?? {
+    embedColor: '#FFFF00',
+    content: '⚠️ Giveaway paused',
+  };
 
-  // Clone the existing embed and set a pause color
-  const embed = EmbedBuilder.from(msg.embeds[0]).setColor((manager.pauseOptions?.embedColor || '#FFFF00') as ColorResolvable);
+  const messages = giveaway.data.messages ?? manager.messages;
 
-  // Edit the message to show it's paused
+  // Update embed color for paused state
+  const embedColor = (pauseOptions.embedColor || '#FFFF00') as ColorResolvable;
+  const embed = EmbedBuilder.from(msg.embeds[0]).setColor(embedColor);
+
+  // Edit the message to show paused status
   await msg.edit({
-    content: manager.pauseOptions?.content || messages.giveawayPaused || '⚠️ Giveaway paused',
+    content: pauseOptions.content || messages.giveawayPaused || '⚠️ Giveaway paused',
     embeds: [embed],
   });
 
-  // Update giveaway state
+  // Mark the giveaway as paused
   giveaway.data.paused = true;
 
-  // Prevent it from ending while paused by shifting the end time
+  // Prevent the giveaway from ending while paused by adding the checkInterval
   giveaway.data.endAt += manager.defaults.checkInterval;
 
-  // Save changes
   manager.save();
-
   return giveaway;
 }

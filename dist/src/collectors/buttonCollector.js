@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createButtonCollector = createButtonCollector;
 const discord_js_1 = require("discord.js");
-const discord_js_2 = require("discord.js");
 async function createButtonCollector(manager, giveaway, msg) {
     const collector = msg.createMessageComponentCollector({
         componentType: discord_js_1.ComponentType.Button,
@@ -16,7 +15,6 @@ async function createButtonCollector(manager, giveaway, msg) {
                 await interaction.reply({ content: manager.messages.leaveGiveaway, ephemeral: true });
             }
             else {
-                // Add participant and check eligibility
                 const added = await giveaway.addParticipant(interaction.user);
                 if (added) {
                     await interaction.reply({ content: manager.messages.enterGiveaway, ephemeral: true });
@@ -26,13 +24,14 @@ async function createButtonCollector(manager, giveaway, msg) {
                 }
             }
             manager.save();
-            // Update embed
-            const oldEmbed = interaction.message.embeds[0];
-            if (oldEmbed) {
-                const updatedDescription = oldEmbed.description?.replace(/Entries: \*\*\d+\*\*/, `Entries: **${giveaway.getParticipants().length}**`);
-                const updatedEmbed = discord_js_2.EmbedBuilder.from(oldEmbed).setDescription(updatedDescription || '');
-                await interaction.message.edit({ embeds: [updatedEmbed] });
+            // إعادة بناء الزر الجديد بالكامل بدون الوصول للـ msg.components
+            const joinButton = new discord_js_1.ButtonBuilder().setCustomId('giveaway-join').setStyle(discord_js_1.ButtonStyle.Primary).setLabel('Join');
+            if (giveaway.data.emoji) {
+                joinButton.setEmoji(giveaway.data.emoji);
             }
+            const entriesButton = new discord_js_1.ButtonBuilder().setCustomId('participants').setEmoji('👥').setDisabled(true).setStyle(discord_js_1.ButtonStyle.Secondary).setLabel(`Entries: ${giveaway.getParticipants().length}`);
+            const newRow = new discord_js_1.ActionRowBuilder().addComponents(joinButton, entriesButton);
+            await interaction.message.edit({ components: [newRow] });
         }
         catch (err) {
             console.error(err);
