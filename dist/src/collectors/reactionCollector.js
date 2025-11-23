@@ -14,12 +14,12 @@ async function createReactionCollector(manager, giveaway, msg) {
     // Filter: only allow the giveaway's emoji and ignore bot reactions
     const filter = (reaction, user) => {
         if (reaction.emoji.id) {
-            // هذا ايموجي مخصص
+            // Custom emoji
             const customEmojiString = `<${reaction.emoji.animated ? 'a' : ''}:${reaction.emoji.name}:${reaction.emoji.id}>`;
             return customEmojiString === giveaway.data.emoji && !user.bot;
         }
         else {
-            // ايموجي عادية
+            // Standard emoji
             return reaction.emoji.name === giveaway.data.emoji && !user.bot;
         }
     };

@@ -1,5 +1,5 @@
 import { Giveaway } from '../Giveaway';
-import { Message, ButtonInteraction, ComponentType, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { Message, ButtonInteraction, ComponentType, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 
 /**
  * Creates a button collector for a giveaway message.
@@ -26,14 +26,14 @@ export async function createButtonCollector(manager: any, giveaway: Giveaway, ms
       if (participantExists) {
         // If participant already joined, remove them
         giveaway.removeParticipant(interaction.user.id);
-        await interaction.reply({ content: manager.messages.leaveGiveaway, ephemeral: true });
+        await interaction.reply({ content: manager.messages.leaveGiveaway, flags: MessageFlags.Ephemeral });
       } else {
         // Otherwise, try to add them
         const added = await giveaway.addParticipant(interaction.user);
         if (added) {
-          await interaction.reply({ content: manager.messages.enterGiveaway, ephemeral: true });
+          await interaction.reply({ content: manager.messages.enterGiveaway, flags: MessageFlags.Ephemeral });
         } else {
-          await interaction.reply({ content: 'You are not eligible to join this giveaway.', ephemeral: true });
+          await interaction.reply({ content: 'You are not eligible to join this giveaway.', flags: MessageFlags.Ephemeral });
         }
       }
 
@@ -41,22 +41,14 @@ export async function createButtonCollector(manager: any, giveaway: Giveaway, ms
       manager.save();
 
       // Rebuild the buttons completely without accessing msg.components
-      const joinButton = new ButtonBuilder()
-        .setCustomId('giveaway-join')
-        .setStyle(ButtonStyle.Primary)
-        .setLabel('Join');
+      const joinButton = new ButtonBuilder().setCustomId('giveaway-join').setStyle(ButtonStyle.Primary).setLabel('Join');
 
       if (giveaway.data.emoji) {
         joinButton.setEmoji(giveaway.data.emoji);
       }
 
       // Show total entries on a disabled secondary button
-      const entriesButton = new ButtonBuilder()
-        .setCustomId('participants')
-        .setEmoji('👥')
-        .setDisabled(true)
-        .setStyle(ButtonStyle.Secondary)
-        .setLabel(`Entries: ${giveaway.getParticipants().length}`);
+      const entriesButton = new ButtonBuilder().setCustomId('participants').setEmoji('👥').setDisabled(true).setStyle(ButtonStyle.Secondary).setLabel(`Entries: ${giveaway.getParticipants().length}`);
 
       const newRow = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton, entriesButton);
 
@@ -65,7 +57,7 @@ export async function createButtonCollector(manager: any, giveaway: Giveaway, ms
     } catch (err) {
       console.error(err);
       if (!interaction.replied) {
-        await interaction.reply({ content: 'Something went wrong.', ephemeral: true });
+        await interaction.reply({ content: 'Something went wrong.', flags: MessageFlags.Ephemeral });
       }
     }
   });

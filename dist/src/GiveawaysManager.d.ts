@@ -21,6 +21,7 @@ export interface GiveawayEvents {
     giveawayWon: (winners: Participant[], giveaway: Giveaway) => void;
     giveawayRerolled: (newWinners: Participant[], giveaway: Giveaway) => void;
     entryAfterEnd: (participant: Participant, giveaway: Giveaway) => void;
+    giveawayPaused: (giveaway: Giveaway) => void;
 }
 export declare interface GiveawaysManager {
     on<U extends keyof GiveawayEvents>(event: U, listener: GiveawayEvents[U]): this;
@@ -51,14 +52,14 @@ export declare class GiveawaysManager extends EventEmitter {
     pauseOptions?: {
         isPaused: boolean;
         content: string;
-        unpauseAfter: number | null;
         embedColor: ColorResolvable;
+        pausedAt?: number;
         infiniteDurationText: string;
     };
     constructor(client: Client, options: ManagerOptions);
     start(channel: TextChannel, options: any, managerOverrides?: Partial<ManagerOptions>): Promise<Giveaway>;
     end(messageId: string): Promise<Giveaway>;
-    pause(messageId: string): Promise<Giveaway>;
+    pause(messageId: string, unpauseAfter?: number): Promise<Giveaway>;
     resume(messageId: string, newEndAt?: number): Promise<Giveaway>;
     edit(messageId: string, options: {
         prize?: string;

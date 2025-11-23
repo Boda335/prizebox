@@ -12,6 +12,6 @@ export declare abstract class BaseStorage {
      * Save all giveaways to storage
      * @param data Array of giveaways to save
      */
-    abstract saveAll(data: GiveawayData[]): void;
+    abstract saveAll(guildId?: string, giveaways?: GiveawayData[]): void;
 }
 //# sourceMappingURL=BaseStorage.d.ts.map

@@ -1,11 +1,10 @@
 import { GiveawaysManager } from '../GiveawaysManager';
 /**
- * Resumes a paused giveaway.
- * Updates the giveaway message and optionally sets a new end time.
- * @param manager The GiveawaysManager instance
+ * Resume a paused giveaway
+ * @param manager The giveaways manager
  * @param messageId The ID of the giveaway message
- * @param newEndAt Optional new end timestamp for the giveaway
- * @returns The resumed Giveaway instance
+ * @param newEndAt Optional new end timestamp in milliseconds
+ * @returns The updated giveaway
  */
 export declare function resumeGiveaway(manager: GiveawaysManager, messageId: string, newEndAt?: number): Promise<import("..").Giveaway>;
 //# sourceMappingURL=resume.d.ts.map

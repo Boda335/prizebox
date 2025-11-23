@@ -2,10 +2,10 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.x     | ✅ Yes             |
-| < 1.0   | ❌ No              |
+| Version | Supported |
+| ------- | --------- |
+| 1.x     | ✅ Yes    |
+| < 1.0   | ❌ No     |
 
 ## Reporting a Vulnerability
 
@@ -21,6 +21,7 @@ We will acknowledge receipt within 48 hours and provide updates on progress.
 ## Security Best Practices
 
 When using PrizeBox:
+
 - Keep your bot token secure
 - Use environment variables for sensitive data
 - Regularly update dependencies

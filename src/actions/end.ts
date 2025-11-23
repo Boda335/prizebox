@@ -48,39 +48,33 @@ export async function endGiveaway(manager: GiveawaysManager, messageId: string) 
     manager.storage.updateUserStats(giveaway.data.guildId, winner.id, { wins: 1, entries: 0 });
   }
 
-  // ✅ Determine effective settings based on the giveaway itself
+  // Determine effective settings based on the giveaway itself
   const effectiveDefaults = { ...manager.defaults, ...(giveaway.data.defaults ?? {}) };
   const effectiveMessages = { ...manager.messages, ...(giveaway.data.messages ?? {}) };
 
-  // 🎨 Use end embed color from giveaway or default
+  // Use end embed color from giveaway or default
   const embedColorEnd = (effectiveDefaults.embedColorEnd || '#000000') as ColorResolvable;
 
-  // 🧱 Create final embed
+  // Create final embed
   const embed = EmbedBuilder.from(msg.embeds[0])
     .setTitle(giveaway.data.prize)
     .setColor(embedColorEnd)
-    .setDescription(
-      winners.length
-        ? `Winner(s): ${winners.map(w => `<@${w.id}>`).join(', ')}\nHosted by: <@${giveaway.data.hostId}>`
-        : `${applyReplacements(effectiveMessages.noWinner, giveaway, winners, msg.url)}\nHosted by: <@${giveaway.data.hostId}>`
-    )
+    .setDescription(winners.length ? `Winner(s): ${winners.map(w => `<@${w.id}>`).join(', ')}\nHosted by: <@${giveaway.data.hostId}>` : `${applyReplacements(effectiveMessages.noWinner, giveaway, winners, msg.url)}\nHosted by: <@${giveaway.data.hostId}>`)
     .setFooter({
       text: applyReplacements(effectiveMessages.endedAt, giveaway, winners, msg.url),
     })
     .setTimestamp(giveaway.data.endAt);
 
-  // 📨 Edit the original giveaway message
+  // Edit the original giveaway message
   await msg.edit({
     content: effectiveMessages.giveawayEnded,
     embeds: [embed],
     components: [],
   });
 
-  // 🏆 Send winners message or no-winner message
+  // Send winners message or no-winner message
   await channel.send({
-    content: winners.length
-      ? applyReplacements(effectiveMessages.winMessage, giveaway, winners, msg.url)
-      : applyReplacements(effectiveMessages.noWinner, giveaway, winners, msg.url),
+    content: winners.length ? applyReplacements(effectiveMessages.winMessage, giveaway, winners, msg.url) : applyReplacements(effectiveMessages.noWinner, giveaway, winners, msg.url),
   });
 
   manager.save();

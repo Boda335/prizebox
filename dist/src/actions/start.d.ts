@@ -22,6 +22,15 @@ interface StartOptions {
         mustBeInGuild?: string;
     };
 }
+/**
+ * Starts a giveaway in the specified channel with the given options.
+ *
+ * @param manager The GiveawaysManager instance
+ * @param channel The text channel to send the giveaway message
+ * @param options Giveaway start options
+ * @param overrides Optional overrides for manager settings
+ * @returns The created Giveaway instance
+ */
 export declare function startGiveaway(manager: GiveawaysManager, channel: TextChannel, options: StartOptions, overrides?: Partial<GiveawaysManager>): Promise<Giveaway>;
 export {};
 //# sourceMappingURL=start.d.ts.map

@@ -5,7 +5,7 @@ const discord_js_1 = require("discord.js");
 const events_1 = require("events");
 const Giveaway_1 = require("./Giveaway");
 const JsonStorage_1 = require("./storage/JsonStorage");
-// Actions for giveaways
+// Giveaway actions
 const delete_1 = require("./actions/delete");
 const edit_1 = require("./actions/edit");
 const end_1 = require("./actions/end");
@@ -27,6 +27,7 @@ class GiveawaysManager extends events_1.EventEmitter {
         this.collectors = new Map();
         this.client = client;
         this.storage = new JsonStorage_1.JsonStorage(options.storage);
+        // Default giveaway options
         this.defaults = {
             botsCanWin: options.defaults?.botsCanWin ?? false,
             embedColor: options.defaults?.embedColor ?? '#FF0000',
@@ -35,6 +36,7 @@ class GiveawaysManager extends events_1.EventEmitter {
             type: options.defaults?.type ?? 'reaction',
             emoji: options.defaults?.emoji ?? '🎉',
         };
+        // Default messages for giveaways
         this.messages = options.messages ?? {
             giveaway: '🎉 Giveaway 🎉',
             giveawayEnded: '🎉 Giveaway Ended 🎉',
@@ -50,72 +52,56 @@ class GiveawaysManager extends events_1.EventEmitter {
             enterGiveaway: 'You joined the giveaway!',
             leaveGiveaway: 'You left the giveaway!',
         };
+        // Last chance options
         this.lastChance = {
             enabled: options.lastChance?.enabled ?? true,
             content: options.lastChance?.content ?? '⚠️ **LAST CHANCE TO ENTER !** ⚠️',
             threshold: options.lastChance?.threshold ?? 10000,
             embedColor: options.lastChance?.embedColor ?? this.defaults.embedColor,
         };
+        // Pause options
         this.pauseOptions = {
             isPaused: options.pauseOptions?.isPaused ?? false,
             content: options.pauseOptions?.content ?? '⚠️ **THIS GIVEAWAY IS PAUSED !** ⚠️',
-            unpauseAfter: options.pauseOptions?.unpauseAfter ?? null,
             embedColor: options.pauseOptions?.embedColor ?? '#FFFF00',
-            infiniteDurationText: options.pauseOptions?.infiniteDurationText ?? '`NEVER`',
+            infiniteDurationText: options.pauseOptions?.infiniteDurationText ?? '`INFINITY`',
         };
+        // Load existing giveaways from storage
         this.giveaways = this.storage.all().map(g => new Giveaway_1.Giveaway(g, this));
+        // Regularly check for ending giveaways
         setInterval(() => this.checkGiveaways(), this.defaults.checkInterval);
+        // Restore collectors after bot restart
         setTimeout(() => (0, restoreCollectors_1.restoreCollectors)(this), 5000);
     }
     async start(channel, options, managerOverrides) {
-        // Merge defaults and overrides
-        const mergedDefaults = { ...this.defaults, ...managerOverrides?.defaults };
-        const mergedLastChance = {
-            enabled: managerOverrides?.lastChance?.enabled ?? this.lastChance?.enabled ?? true,
-            content: managerOverrides?.lastChance?.content ?? this.lastChance?.content ?? '⚠️ **LAST CHANCE TO ENTER !** ⚠️',
-            threshold: managerOverrides?.lastChance?.threshold ?? this.lastChance?.threshold ?? 10000,
-            embedColor: managerOverrides?.lastChance?.embedColor ?? this.lastChance?.embedColor ?? this.defaults.embedColor,
-        };
-        const mergedPauseOptions = {
-            isPaused: managerOverrides?.pauseOptions?.isPaused ?? this.pauseOptions?.isPaused ?? false,
-            content: managerOverrides?.pauseOptions?.content ?? this.pauseOptions?.content ?? '⚠️ **THIS GIVEAWAY IS PAUSED !** ⚠️',
-            unpauseAfter: managerOverrides?.pauseOptions?.unpauseAfter ?? this.pauseOptions?.unpauseAfter ?? null,
-            embedColor: managerOverrides?.pauseOptions?.embedColor ?? this.pauseOptions?.embedColor ?? '#FFFF00',
-            infiniteDurationText: managerOverrides?.pauseOptions?.infiniteDurationText ?? this.pauseOptions?.infiniteDurationText ?? '`NEVER`',
-        };
-        const mergedMessages = managerOverrides?.messages ?? this.messages;
-        // ✅ إنشاء نسخة مؤقتة من المدير
+        // Merge manager defaults with overrides
+        const activeDefaults = deepMerge(this.defaults, managerOverrides?.defaults || {});
+        const activeLastChance = deepMerge(this.lastChance, managerOverrides?.lastChance || {});
+        const activePauseOptions = deepMerge(this.pauseOptions, managerOverrides?.pauseOptions || {});
+        const activeMessages = deepMerge(this.messages, managerOverrides?.messages || {});
+        // Create temporary manager instance with merged options
         const tempManager = Object.create(this);
-        // تعيين الإعدادات المخصصة
-        tempManager.defaults = mergedDefaults;
-        tempManager.lastChance = mergedLastChance;
-        tempManager.pauseOptions = mergedPauseOptions;
-        tempManager.messages = mergedMessages;
-        // ✅ لو السيرفر عنده إعدادات خاصة، نستخدم Storage خاص بيه
-        if (managerOverrides) {
-            const guildId = (channel.guild?.id || 'global').toString();
-            const storagePath = `./giveaways/${guildId}.json`; // تقدر تغيرها لـ MongoStorage مثلاً
-            tempManager.storage = new JsonStorage_1.JsonStorage(storagePath);
-        }
-        // تحديد نوع و إيموجي الجيف أواي
-        const giveawayType = options.type ?? tempManager.defaults.type;
-        const giveawayEmoji = options.emoji ?? tempManager.defaults.emoji;
-        // ✅ بدء الجيف أواي باستخدام الإعدادات الخاصة بالسيرفر
+        tempManager.defaults = activeDefaults;
+        tempManager.lastChance = activeLastChance;
+        tempManager.pauseOptions = activePauseOptions;
+        tempManager.messages = activeMessages;
+        tempManager.storage = this.storage;
+        const giveawayType = options.type ?? activeDefaults.type;
+        const giveawayEmoji = options.emoji ?? activeDefaults.emoji;
         const giveaway = await (0, start_1.startGiveaway)(tempManager, channel, {
             ...options,
             type: giveawayType,
             emoji: giveawayEmoji,
         });
-        // حفظ الجيف أواي في storage السيرفر الخاص
         tempManager.save();
         return giveaway;
     }
     async end(messageId) {
         return (0, end_1.endGiveaway)(this, messageId);
     }
-    pause(messageId) {
+    pause(messageId, unpauseAfter) {
         this.removeCollector(messageId);
-        return (0, pause_1.pauseGiveaway)(this, messageId);
+        return (0, pause_1.pauseGiveaway)(this, messageId, unpauseAfter);
     }
     async resume(messageId, newEndAt) {
         const result = await (0, resume_1.resumeGiveaway)(this, messageId, newEndAt);
@@ -156,8 +142,7 @@ class GiveawaysManager extends events_1.EventEmitter {
     }
     async generateTranscript(messageId, outputDir) {
         try {
-            const filePath = await (0, transcript_1.generateTranscript)(this, messageId, { outputDir });
-            return filePath;
+            return await (0, transcript_1.generateTranscript)(this, messageId, { outputDir });
         }
         catch (error) {
             console.error(`Failed to generate transcript for giveaway ${messageId}:`, error);
@@ -165,7 +150,13 @@ class GiveawaysManager extends events_1.EventEmitter {
         }
     }
     save() {
-        this.storage.saveAll(this.giveaways.map(g => g.data));
+        const giveawaysByGuild = {};
+        this.giveaways.forEach(g => {
+            if (!giveawaysByGuild[g.data.guildId])
+                giveawaysByGuild[g.data.guildId] = [];
+            giveawaysByGuild[g.data.guildId].push(g.data);
+        });
+        this.storage.setAllGiveaways(giveawaysByGuild);
     }
     async createCollectorForGiveaway(giveaway, msg) {
         this.removeCollector(giveaway.data.messageId);
@@ -184,15 +175,18 @@ class GiveawaysManager extends events_1.EventEmitter {
     async checkGiveaways() {
         const now = Date.now();
         for (const g of this.giveaways) {
-            if (g.data.ended || g.data.paused)
+            // Auto-resume paused giveaway if unpauseAfter is set
+            if (g.data.paused && g.data.pauseOptions?.unpauseAfter) {
+                if (now >= g.data.pauseOptions.unpauseAfter) {
+                    await this.resume(g.data.messageId);
+                }
+                continue;
+            }
+            if (g.data.ended)
                 continue;
             try {
-                // 🗄️ محاولة جلب إعدادات السيرفر من قاعدة البيانات (إن وجدت)
-                const GuildGiveawaySettings = require('@database/giveawaySchema');
-                const guildSettings = await GuildGiveawaySettings.findOne({ guildId: g.data.guildId }).catch(() => null);
-                // 🧩 تحديد إعدادات lastChance حسب الأولوية
-                const lc = g.data.lastChance ?? guildSettings?.lastChance ?? this.lastChance;
-                // 🚨 لو lastChance مفعّل ولم يتم تفعيله من قبل
+                const lc = g.data.lastChance ?? this.lastChance;
+                // LAST CHANCE FEATURE
                 if (lc?.enabled && !g.data.lastChanceTriggered && g.data.endAt - now <= lc.threshold) {
                     const channel = this.client.channels.cache.get(g.data.channelId);
                     if (!channel || !channel.isTextBased())
@@ -200,22 +194,34 @@ class GiveawaysManager extends events_1.EventEmitter {
                     const msg = await channel.messages.fetch(g.data.messageId).catch(() => null);
                     if (!msg)
                         continue;
-                    // استخدم لون الـ lastChance من الجيف أو السيرفر أو الافتراضي
-                    const embedColor = lc.embedColor ?? guildSettings?.lastChance?.embedColor ?? this.defaults.embedColor;
+                    const embedColor = lc.embedColor ?? this.defaults.embedColor;
                     const embed = discord_js_1.EmbedBuilder.from(msg.embeds[0]).setColor(embedColor);
                     await msg.edit({ content: lc.content, embeds: [embed] });
                     g.data.lastChanceTriggered = true;
                     this.save();
                 }
-                // 🕓 انتهاء الجيف
-                if (g.data.endAt <= now)
+                // End giveaway if time has passed
+                if (g.data.endAt <= now) {
                     await this.end(g.data.messageId);
+                }
             }
             catch (err) {
-                console.error('Last chance update failed:', err);
+                console.error('Check giveaway failed:', err);
             }
         }
     }
 }
 exports.GiveawaysManager = GiveawaysManager;
+function deepMerge(base, override) {
+    const result = { ...base };
+    for (const key in override) {
+        if (typeof override[key] === 'object' && override[key] !== null && !Array.isArray(override[key])) {
+            result[key] = deepMerge(result[key], override[key]);
+        }
+        else if (override[key] !== undefined) {
+            result[key] = override[key];
+        }
+    }
+    return result;
+}
 //# sourceMappingURL=GiveawaysManager.js.map

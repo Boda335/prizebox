@@ -11,7 +11,7 @@ describe('GiveawaysManager', () => {
   let mockClient: any;
 
   beforeEach(() => {
-    jest.useFakeTimers(); 
+    jest.useFakeTimers();
     mockGuild = createMockGuild();
     mockMessage = createMockMessage();
     mockChannel = createMockChannel(mockGuild, mockMessage);
@@ -27,7 +27,7 @@ describe('GiveawaysManager', () => {
         type: 'reaction',
         emoji: '🎉',
       },
-      isTest: true 
+      isTest: true,
     });
 
     manager['collectors'].forEach((c: any) => c.stop?.());

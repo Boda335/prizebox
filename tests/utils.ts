@@ -1,7 +1,6 @@
 import { jest } from '@jest/globals';
 
-export const mockFn = <T = any>(returnValue?: T) =>
-  jest.fn(() => Promise.resolve(returnValue as T));
+export const mockFn = <T = any>(returnValue?: T) => jest.fn(() => Promise.resolve(returnValue as T));
 
 export const createMockCollector = () => {
   const handlers: Record<string, Function[]> = {};

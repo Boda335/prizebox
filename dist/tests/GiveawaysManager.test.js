@@ -26,7 +26,7 @@ describe('GiveawaysManager', () => {
                 type: 'reaction',
                 emoji: '🎉',
             },
-            isTest: true
+            isTest: true,
         });
         manager['collectors'].forEach((c) => c.stop?.());
         manager['collectors'].clear();

@@ -5,6 +5,7 @@ Thank you for considering contributing to PrizeBox! This document outlines the p
 ## Code of Conduct
 
 By participating in this project, you agree to abide by our Code of Conduct:
+
 - Be respectful and inclusive
 - Welcome newcomers and help them learn
 - Focus on constructive feedback
@@ -17,6 +18,7 @@ By participating in this project, you agree to abide by our Code of Conduct:
 Before creating bug reports, please check existing issues to avoid duplicates.
 
 **Bug Report Template:**
+
 - **Summary**: Brief description of the bug
 - **Steps to Reproduce**: Detailed steps to reproduce the issue
 - **Expected Behavior**: What should happen
@@ -27,6 +29,7 @@ Before creating bug reports, please check existing issues to avoid duplicates.
 ### Suggesting Features
 
 Feature requests are welcome! Please provide:
+
 - Clear description of the feature
 - Use cases and examples
 - Potential implementation approach
@@ -44,8 +47,10 @@ Feature requests are welcome! Please provide:
 8. Open a Pull Request
 
 ### Development Setup
+
 ```bash
 git clone https://github.com/Boda335/prizebox.git
 cd prizebox
 npm install
 npm run dev
+```

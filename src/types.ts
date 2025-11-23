@@ -49,7 +49,7 @@ export interface GuildStats {
  */
 export interface StorageData {
   /** List of all giveaways */
-  giveaways: GiveawayData[];
+  giveaways: Record<string, GiveawayData[]>;
   /** User statistics by guild */
   userStats: {
     [guildId: string]: GuildStats;
@@ -129,11 +129,11 @@ export interface GiveawayData {
     isPaused: boolean;
     content: string;
     unpauseAfter: number | null;
-    embedColor: string;
+    embedColor: ColorResolvable;
     infiniteDurationText: string;
+    pausedAt?: number;
   };
 }
-
 
 /**
  * Options for configuring the giveaway manager.
@@ -179,8 +179,7 @@ export interface ManagerOptions {
     isPaused?: boolean;
     /** Content to display when paused */
     content?: string;
-    /** Automatically unpause after specified time (ms), null = never */
-    unpauseAfter?: number | null;
+    /** Automatically unpause after specified time (ms), null = INFINITY */
     /** Embed color for paused message */
     embedColor?: ColorResolvable;
     /** Text to display for infinite duration paused giveaways */

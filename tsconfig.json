@@ -15,15 +15,8 @@
     "removeComments": false,
     "resolveJsonModule": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "emitDecoratorMetadata": true
   },
-  "include": [
-    "src/**/*",
-    "tests"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "examples"
-  ]
+  "include": ["src/**/*", "tests"],
+  "exclude": ["node_modules", "dist", "examples"]
 }

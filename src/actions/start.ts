@@ -36,12 +36,7 @@ interface StartOptions {
  * @param overrides Optional overrides for manager settings
  * @returns The created Giveaway instance
  */
-export async function startGiveaway(
-  manager: GiveawaysManager,
-  channel: TextChannel,
-  options: StartOptions,
-  overrides?: Partial<GiveawaysManager>
-): Promise<Giveaway> {
+export async function startGiveaway(manager: GiveawaysManager, channel: TextChannel, options: StartOptions, overrides?: Partial<GiveawaysManager>): Promise<Giveaway> {
   const endAt = Date.now() + options.duration;
 
   // Merge defaults, lastChance, pauseOptions, and messages from manager, overrides, and options
@@ -67,9 +62,7 @@ export async function startGiveaway(
   let description = '';
 
   // Participation instruction
-  description += type === 'button'
-    ? `${activeMessages.inviteToParticipate || 'Click the button to enter!'}\n`
-    : `${activeMessages.inviteToParticipate || 'React to enter!'}\n`;
+  description += type === 'button' ? `${activeMessages.inviteToParticipate || 'Click the button to enter!'}\n` : `${activeMessages.inviteToParticipate || 'React to enter!'}\n`;
 
   // End time
   description += `${(activeMessages.drawing || 'Ends at {this.timestamp}').replace('{this.timestamp}', `<t:${Math.floor(endAt / 1000)}:R>`)}\n`;
@@ -111,12 +104,7 @@ export async function startGiveaway(
   if (type === 'button') {
     // Create "Join" and "Entries" buttons
     const joinButton = new ButtonBuilder().setCustomId('giveaway-join').setEmoji(emoji).setStyle(ButtonStyle.Primary);
-    const entriesButton = new ButtonBuilder()
-      .setCustomId('participants')
-      .setEmoji('👥')
-      .setLabel('Entries: 0')
-      .setDisabled(true)
-      .setStyle(ButtonStyle.Secondary);
+    const entriesButton = new ButtonBuilder().setCustomId('participants').setEmoji('👥').setLabel('Entries: 0').setDisabled(true).setStyle(ButtonStyle.Secondary);
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(joinButton, entriesButton);
 

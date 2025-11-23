@@ -3,53 +3,42 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.startGiveaway = startGiveaway;
 const discord_js_1 = require("discord.js");
 const Giveaway_1 = require("../Giveaway");
+/**
+ * Starts a giveaway in the specified channel with the given options.
+ *
+ * @param manager The GiveawaysManager instance
+ * @param channel The text channel to send the giveaway message
+ * @param options Giveaway start options
+ * @param overrides Optional overrides for manager settings
+ * @returns The created Giveaway instance
+ */
 async function startGiveaway(manager, channel, options, overrides) {
     const endAt = Date.now() + options.duration;
-    const activeDefaults = {
-        ...manager.defaults,
-        ...(overrides?.defaults ?? {}),
-        ...(options.defaults ?? {}),
-    };
-    const activeLastChance = {
-        ...manager.lastChance,
-        ...(overrides?.lastChance ?? {}),
-        ...(options.lastChance ?? {}),
-    };
-    const activePauseOptions = {
-        ...manager.pauseOptions,
-        ...(overrides?.pauseOptions ?? {}),
-        ...(options.pauseOptions ?? {}),
-    };
-    const activeMessages = {
-        ...manager.messages,
-        ...(overrides?.messages ?? {}),
-        ...(options.messages ?? {}),
-    };
+    // Merge defaults, lastChance, pauseOptions, and messages from manager, overrides, and options
+    const activeDefaults = { ...manager.defaults, ...(overrides?.defaults ?? {}), ...(options.defaults ?? {}) };
+    const activeLastChance = { ...manager.lastChance, ...(overrides?.lastChance ?? {}), ...(options.lastChance ?? {}) };
+    const activePauseOptions = { ...manager.pauseOptions, ...(overrides?.pauseOptions ?? {}), ...(options.pauseOptions ?? {}) };
+    const activeMessages = { ...manager.messages, ...(overrides?.messages ?? {}), ...(options.messages ?? {}) };
     const winnerCount = options.winnerCount;
     const type = options.type ?? activeDefaults.type;
     const emoji = options.emoji ?? activeDefaults.emoji;
     const embedColor = (activeDefaults.embedColor ?? '#FF0000');
-    // إنشاء Embed الأساسي
+    // Create the main embed
     const embed = new discord_js_1.EmbedBuilder()
-        .setAuthor({
-        name: channel.guild.name,
-        iconURL: channel.guild.iconURL() || undefined,
-    })
+        .setAuthor({ name: channel.guild.name, iconURL: channel.guild.iconURL() || undefined })
         .setTitle(options.prize)
         .setColor(embedColor)
         .setFooter({
         text: activeMessages.embedFooter?.replace('{this.winnerCount}', winnerCount.toString()) || `${winnerCount} winner(s)`,
     });
     let description = '';
-    // نص المشاركة
-    description += type === 'button'
-        ? `${activeMessages.inviteToParticipate || 'Click the button to enter!'}\n`
-        : `${activeMessages.inviteToParticipate || 'React to enter!'}\n`;
-    // وقت الانتهاء
+    // Participation instruction
+    description += type === 'button' ? `${activeMessages.inviteToParticipate || 'Click the button to enter!'}\n` : `${activeMessages.inviteToParticipate || 'React to enter!'}\n`;
+    // End time
     description += `${(activeMessages.drawing || 'Ends at {this.timestamp}').replace('{this.timestamp}', `<t:${Math.floor(endAt / 1000)}:R>`)}\n`;
-    // من المستضيف
+    // Hosted by
     description += `${activeMessages.hostedBy ? activeMessages.hostedBy.replace('{this.hostedBy}', `<@${options.hostId}>`) : ''}\n`;
-    // 🎁 Bonus Entries (إذا فيه بيانات)
+    // Bonus Entries, if any
     if (options.bonusEntries && options.bonusEntries.length > 0) {
         description += `\n🎁 Bonus Entries:\n`;
         options.bonusEntries.forEach(bonus => {
@@ -57,7 +46,7 @@ async function startGiveaway(manager, channel, options, overrides) {
             description += `- ${target}: +${bonus.bonus}\n`;
         });
     }
-    // 🔒 Requirements (إذا فيه بيانات)
+    // Requirements, if any
     if (options.requirements && (options.requirements.roleId || options.requirements.mustBeInGuild)) {
         description += `\n🔒 Requirements:\n`;
         if (options.requirements.roleId) {
@@ -76,20 +65,13 @@ async function startGiveaway(manager, channel, options, overrides) {
         }
     }
     embed.setDescription(description);
-    // إرسال الرسالة
+    // Send the giveaway message
     let msg;
     if (type === 'button') {
-        const button = new discord_js_1.ButtonBuilder()
-            .setCustomId('giveaway-join')
-            .setEmoji(emoji)
-            .setStyle(discord_js_1.ButtonStyle.Primary);
-        const button2 = new discord_js_1.ButtonBuilder()
-            .setCustomId('participants')
-            .setEmoji("👥")
-            .setLabel('Entries: 0')
-            .setDisabled(true)
-            .setStyle(discord_js_1.ButtonStyle.Secondary);
-        const row = new discord_js_1.ActionRowBuilder().addComponents(button, button2);
+        // Create "Join" and "Entries" buttons
+        const joinButton = new discord_js_1.ButtonBuilder().setCustomId('giveaway-join').setEmoji(emoji).setStyle(discord_js_1.ButtonStyle.Primary);
+        const entriesButton = new discord_js_1.ButtonBuilder().setCustomId('participants').setEmoji('👥').setLabel('Entries: 0').setDisabled(true).setStyle(discord_js_1.ButtonStyle.Secondary);
+        const row = new discord_js_1.ActionRowBuilder().addComponents(joinButton, entriesButton);
         msg = await channel.send({
             content: activeMessages.giveaway || manager.messages.giveaway,
             embeds: [embed],
@@ -97,15 +79,16 @@ async function startGiveaway(manager, channel, options, overrides) {
         });
     }
     else {
+        // Reaction-based giveaway
         msg = await channel.send({
             content: activeMessages.giveaway || manager.messages.giveaway,
             embeds: [embed],
         });
-        // دعم Unicode + Custom emoji
+        // Support for Unicode and custom emoji
         const emojiToReact = emoji.startsWith('<') ? parseCustomEmoji(emoji) : emoji;
         await msg.react(emojiToReact);
     }
-    // حفظ بيانات السحب
+    // Save the giveaway data
     const giveawayData = {
         messageId: msg.id,
         channelId: channel.id,
@@ -134,11 +117,15 @@ async function startGiveaway(manager, channel, options, overrides) {
     await manager.createCollectorForGiveaway(giveaway, msg);
     return giveaway;
 }
-// دالة مساعدة لتحويل Custom emoji للنموذج الصحيح للـ React
+/**
+ * Helper function to parse a custom emoji into a format usable for reactions
+ * @param emoji The custom emoji string
+ * @returns The formatted emoji string
+ */
 function parseCustomEmoji(emoji) {
     const match = emoji.match(/<(a?):(\w+):(\d+)>/);
     if (!match)
-        return emoji; // لو مش Custom emoji خليها زي ما هي
+        return emoji; // If not a custom emoji, return as is
     const animated = match[1] === 'a';
     const name = match[2];
     const id = match[3];

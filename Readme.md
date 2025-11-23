@@ -44,7 +44,7 @@
 - **🎪 Dual Entry Methods**: Support for both reactions and interactive buttons
 - **📊 Advanced Statistics**: Track user participation and wins across all giveaways
 - **🔧 Flexible Management**: Start, pause, resume, edit, extend, and reroll giveaways
-- **💾 Persistent Storage**: Never lose giveaway data with JSON-based storage
+- **💾 Persistent Storage**: INFINITY lose giveaway data with JSON-based storage
 - **🏆 Leaderboards**: Built-in leaderboard system for most active participants
 - **⚡ Real-time Updates**: Live participant count updates and last-chance notifications
 - **🛡️ Production Ready**: Comprehensive error handling and data validation
@@ -58,6 +58,7 @@
 <td width="50%">
 
 ### 🎮 **Giveaway Management**
+
 - Create reaction or button-based giveaways
 - Pause and resume functionality
 - Edit prizes and winner counts on-the-fly
@@ -68,6 +69,7 @@
 <td width="50%">
 
 ### 📈 **Analytics & Tracking**
+
 - User participation statistics
 - Win/loss tracking per user
 - Guild-based statistics storage
@@ -81,15 +83,15 @@
 
 ### 🎛️ **Management Operations**
 
-| Operation | Description | Method |
-|-----------|-------------|--------|
-| **Start** | Create new giveaway | `manager.start()` |
-| **End** | Finish and pick winners | `manager.end()` |
-| **Pause** | Temporarily stop giveaway | `manager.pause()` |
-| **Resume** | Continue paused giveaway | `manager.resume()` |
-| **Edit** | Modify giveaway details | `manager.edit()` |
-| **Extend** | Add more time | `manager.extend()` |
-| **Reroll** | Pick new winners | `manager.reroll()` |
+| Operation  | Description                | Method             |
+| ---------- | -------------------------- | ------------------ |
+| **Start**  | Create new giveaway        | `manager.start()`  |
+| **End**    | Finish and pick winners    | `manager.end()`    |
+| **Pause**  | Temporarily stop giveaway  | `manager.pause()`  |
+| **Resume** | Continue paused giveaway   | `manager.resume()` |
+| **Edit**   | Modify giveaway details    | `manager.edit()`   |
+| **Extend** | Add more time              | `manager.extend()` |
+| **Reroll** | Pick new winners           | `manager.reroll()` |
 | **Delete** | Remove giveaway completely | `manager.delete()` |
 
 ---
@@ -110,12 +112,7 @@ const { GiveawaysManager } = require('prizebox');
 
 // Create Discord client
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildMessageReactions,
-    GatewayIntentBits.MessageContent
-  ]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.MessageContent],
 });
 
 // Initialize PrizeBox
@@ -126,22 +123,22 @@ const giveawayManager = new GiveawaysManager(client, {
     embedColor: '#FF6B6B',
     embedColorEnd: '#2C2F33',
     type: 'reaction',
-    emoji: '🎉'
-  }
+    emoji: '🎉',
+  },
 });
 
 // Start a giveaway
-client.on('messageCreate', async (message) => {
+client.on('messageCreate', async message => {
   if (message.content === '!start-giveaway') {
     const channel = message.channel;
-    
+
     await giveawayManager.start(channel, {
       prize: 'Discord Nitro',
       duration: 60000, // 1 minute
       winnerCount: 1,
-      hostId: message.author.id
+      hostId: message.author.id,
     });
-    
+
     message.reply('✅ Giveaway started!');
   }
 });
@@ -184,7 +181,7 @@ npm run dev
 const manager = new GiveawaysManager(client, {
   // Storage configuration
   storage: './data/giveaways.json',
-  
+
   // Default settings for all giveaways
   defaults: {
     botsCanWin: false,
@@ -192,9 +189,9 @@ const manager = new GiveawaysManager(client, {
     embedColorEnd: '#2C2F33',
     checkInterval: 5000,
     type: 'button', // 'reaction' or 'button'
-    emoji: '🎁'
+    emoji: '🎁',
   },
-  
+
   // Custom messages
   messages: {
     giveaway: '🎉 **GIVEAWAY** 🎉',
@@ -203,25 +200,25 @@ const manager = new GiveawaysManager(client, {
     winMessage: 'Congratulations {winners}! You won **{this.prize}**!',
     noWinner: 'No valid participants for **{this.prize}**.',
     hostedBy: 'Hosted by: {this.hostedBy}',
-    embedFooter: '{this.winnerCount} winner(s)'
+    embedFooter: '{this.winnerCount} winner(s)',
   },
-  
+
   // Last chance notification
   lastChance: {
     enabled: true,
     content: '⚠️ **LAST CHANCE TO ENTER!** ⚠️',
     threshold: 10000, // 10 seconds before end
-    embedColor: '#FFFF00'
+    embedColor: '#FFFF00',
   },
-  
+
   // Pause options
   pauseOptions: {
     isPaused: false,
     content: '⏸️ **THIS GIVEAWAY IS PAUSED!** ⏸️',
     unpauseAfter: null,
     embedColor: '#FFFF00',
-    infiniteDurationText: '`NEVER`'
-  }
+    infiniteDurationText: '`INFINITY`',
+  },
 });
 ```
 
@@ -254,27 +251,31 @@ await manager.start(channel, {
   prize: 'Discord Nitro',
   duration: 24 * 60 * 60 * 1000, // 24 hours
   winnerCount: 2,
-  hostId: interaction.user.id
+  hostId: interaction.user.id,
 });
 
 // Advanced giveaway with custom settings
-await manager.start(channel, {
-  prize: 'Steam Gift Card',
-  duration: 60 * 60 * 1000, // 1 hour
-  winnerCount: 3,
-  hostId: interaction.user.id,
-  type: 'button',
-  emoji: '🎁'
-}, {
-  // Override default settings for this giveaway
-  defaults: {
-    embedColor: '#00FF00',
-    botsCanWin: true
+await manager.start(
+  channel,
+  {
+    prize: 'Steam Gift Card',
+    duration: 60 * 60 * 1000, // 1 hour
+    winnerCount: 3,
+    hostId: interaction.user.id,
+    type: 'button',
+    emoji: '🎁',
   },
-  messages: {
-    inviteToParticipate: 'Click the button to join this exclusive giveaway!'
+  {
+    // Override default settings for this giveaway
+    defaults: {
+      embedColor: '#00FF00',
+      botsCanWin: true,
+    },
+    messages: {
+      inviteToParticipate: 'Click the button to join this exclusive giveaway!',
+    },
   }
-});
+);
 ```
 
 ### Managing Active Giveaways
@@ -294,9 +295,8 @@ await manager.resume(messageId);
 await manager.edit(messageId, {
   prize: 'Updated Prize Name',
   winnerCount: 5,
-  addTime: 30 * 60 * 1000 // Add 30 minutes
+  addTime: 30 * 60 * 1000, // Add 30 minutes
 });
-
 
 // Reroll winners
 const newWinners = await manager.reroll(messageId, 2); // Pick 2 new winners
@@ -347,7 +347,7 @@ await manager.sendLeaderboard(channel, 'wins', 10);
     username: 'john_doe',
     avatar: 'https://cdn.discordapp.com/avatars/...',
     entries: 25,
-    wins: 3
+    wins: 3,
   },
   {
     rank: 2,
@@ -355,9 +355,9 @@ await manager.sendLeaderboard(channel, 'wins', 10);
     username: 'jane_smith',
     avatar: 'https://cdn.discordapp.com/avatars/...',
     entries: 18,
-    wins: 2
-  }
-]
+    wins: 2,
+  },
+];
 ```
 
 ---
@@ -411,26 +411,28 @@ class CustomStorage {
   constructor(options) {
     // Your custom storage setup
   }
-  
+
   all() {
     // Return all giveaways
   }
-  
+
   saveAll(giveaways) {
     // Save giveaways array
   }
-  
+
   updateUserStats(guildId, userId, changes) {
     // Update user statistics
   }
-  
+
   getAllUserStats() {
     // Return all user statistics
   }
 }
 
 const manager = new GiveawaysManager(client, {
-  storage: new CustomStorage({ /* options */ })
+  storage: new CustomStorage({
+    /* options */
+  }),
 });
 ```
 
@@ -445,12 +447,7 @@ const { Client, GatewayIntentBits, SlashCommandBuilder } = require('discord.js')
 const { GiveawaysManager } = require('prizebox');
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.GuildMessageReactions,
-    GatewayIntentBits.MessageContent
-  ]
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildMessageReactions, GatewayIntentBits.MessageContent],
 });
 
 const manager = new GiveawaysManager(client, {
@@ -458,48 +455,48 @@ const manager = new GiveawaysManager(client, {
   defaults: {
     botsCanWin: false,
     embedColor: '#FF6B6B',
-    type: 'button'
-  }
+    type: 'button',
+  },
 });
 
 // Slash command handling
-client.on('interactionCreate', async (interaction) => {
+client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
-  
+
   if (interaction.commandName === 'giveaway') {
     const subcommand = interaction.options.getSubcommand();
-    
+
     switch (subcommand) {
       case 'start': {
         const prize = interaction.options.getString('prize');
         const duration = interaction.options.getInteger('duration') * 60 * 1000;
         const winners = interaction.options.getInteger('winners');
-        
+
         await manager.start(interaction.channel, {
           prize,
           duration,
           winnerCount: winners,
-          hostId: interaction.user.id
+          hostId: interaction.user.id,
         });
-        
+
         await interaction.reply('✅ Giveaway started successfully!');
         break;
       }
-      
+
       case 'end': {
         const messageId = interaction.options.getString('message-id');
         await manager.end(messageId);
         await interaction.reply('✅ Giveaway ended!');
         break;
       }
-      
+
       case 'reroll': {
         const messageId = interaction.options.getString('message-id');
         await manager.reroll(messageId);
         await interaction.reply('✅ Winners rerolled!');
         break;
       }
-      
+
       case 'leaderboard': {
         await manager.sendLeaderboard(interaction.channel);
         await interaction.reply('📊 Leaderboard posted!');
@@ -518,13 +515,11 @@ client.login('YOUR_BOT_TOKEN');
 // Custom validation for giveaway entries
 manager.on('giveawayJoin', (participant, giveaway) => {
   // Custom logic for entry validation
-  const member = giveaway.manager.client.guilds.cache
-    .get(giveaway.data.guildId)
-    .members.cache.get(participant.id);
-  
+  const member = giveaway.manager.client.guilds.cache.get(giveaway.data.guildId).members.cache.get(participant.id);
+
   // Check if member has required role
   const hasRequiredRole = member.roles.cache.has('REQUIRED_ROLE_ID');
-  
+
   if (!hasRequiredRole) {
     // Remove participant if they don't meet requirements
     giveaway.removeParticipant(participant.id);
@@ -540,45 +535,46 @@ manager.on('giveawayJoin', (participant, giveaway) => {
 ### GiveawaysManager Class
 
 #### Constructor
+
 ```typescript
 new GiveawaysManager(client: Client, options: ManagerOptions)
 ```
 
 #### Methods
 
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `start()` | `channel, options, overrides?` | `Promise<Giveaway>` | Start new giveaway |
-| `end()` | `messageId` | `Promise<Giveaway>` | End giveaway |
-| `pause()` | `messageId` | `Promise<Giveaway>` | Pause giveaway |
-| `resume()` | `messageId, newEndAt?` | `Promise<Giveaway>` | Resume giveaway |
-| `edit()` | `messageId, options` | `Promise<Giveaway>` | Edit giveaway |
-| `reroll()` | `messageId, winnerCount?` | `Promise<Participant[]>` | Reroll winners |
-| `delete()` | `messageId` | `Promise<boolean>` | Delete giveaway |
-| `list()` | `status?` | `Giveaway[]` | List giveaways |
-| `leaderboard()` | `type?, top?` | `LeaderboardEntry[]` | Get leaderboard |
-| `sendLeaderboard()` | `channel, type?, top?` | `Promise<void>` | Send leaderboard |
+| Method              | Parameters                     | Returns                  | Description        |
+| ------------------- | ------------------------------ | ------------------------ | ------------------ |
+| `start()`           | `channel, options, overrides?` | `Promise<Giveaway>`      | Start new giveaway |
+| `end()`             | `messageId`                    | `Promise<Giveaway>`      | End giveaway       |
+| `pause()`           | `messageId`                    | `Promise<Giveaway>`      | Pause giveaway     |
+| `resume()`          | `messageId, newEndAt?`         | `Promise<Giveaway>`      | Resume giveaway    |
+| `edit()`            | `messageId, options`           | `Promise<Giveaway>`      | Edit giveaway      |
+| `reroll()`          | `messageId, winnerCount?`      | `Promise<Participant[]>` | Reroll winners     |
+| `delete()`          | `messageId`                    | `Promise<boolean>`       | Delete giveaway    |
+| `list()`            | `status?`                      | `Giveaway[]`             | List giveaways     |
+| `leaderboard()`     | `type?, top?`                  | `LeaderboardEntry[]`     | Get leaderboard    |
+| `sendLeaderboard()` | `channel, type?, top?`         | `Promise<void>`          | Send leaderboard   |
 
 ### Giveaway Class
 
 #### Methods
 
-| Method | Parameters | Returns | Description |
-|--------|------------|---------|-------------|
-| `addParticipant()` | `user` | `void` | Add participant |
-| `removeParticipant()` | `userId` | `void` | Remove participant |
-| `getParticipants()` | | `Participant[]` | Get all participants |
-| `getWinners()` | | `string[]` | Get winner IDs |
-| `setWinners()` | `winners` | `void` | Set winners |
+| Method                | Parameters | Returns         | Description          |
+| --------------------- | ---------- | --------------- | -------------------- |
+| `addParticipant()`    | `user`     | `void`          | Add participant      |
+| `removeParticipant()` | `userId`   | `void`          | Remove participant   |
+| `getParticipants()`   |            | `Participant[]` | Get all participants |
+| `getWinners()`        |            | `string[]`      | Get winner IDs       |
+| `setWinners()`        | `winners`  | `void`          | Set winners          |
 
 ### Events
 
-| Event | Parameters | Description |
-|-------|------------|-------------|
-| `giveawayJoin` | `participant, giveaway` | User joins giveaway |
-| `giveawayLeave` | `participant, giveaway` | User leaves giveaway |
-| `giveawayInvalidEntry` | `userId, giveaway` | Invalid entry attempt |
-| `giveawayInvalidEntry` | `userId, giveaway` | Invalid entry aص  ttempt |
+| Event                  | Parameters              | Description             |
+| ---------------------- | ----------------------- | ----------------------- |
+| `giveawayJoin`         | `participant, giveaway` | User joins giveaway     |
+| `giveawayLeave`        | `participant, giveaway` | User leaves giveaway    |
+| `giveawayInvalidEntry` | `userId, giveaway`      | Invalid entry attempt   |
+| `giveawayInvalidEntry` | `userId, giveaway`      | Invalid entry aص ttempt |
 
 ---
 
@@ -669,7 +665,6 @@ npm run dev
 - **Examples Repository**: Working code examples and templates
 
 ---
-
 
 <div align="center">
   

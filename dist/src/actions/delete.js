@@ -14,16 +14,18 @@ async function deleteGiveaway(manager, messageId) {
         throw new Error('Giveaway not found');
     const giveaway = manager.giveaways[index];
     const channel = manager.client.channels.cache.get(giveaway.data.channelId);
+    // Stop collector (important!)
+    manager['removeCollector'](messageId);
     // Try to delete the giveaway message from the channel
     if (channel) {
         const msg = await channel.messages.fetch(messageId).catch(() => null);
         if (msg) {
-            await msg.delete().catch(() => null); // Ignore errors (e.g., missing permissions)
+            await msg.delete().catch(() => null); // Ignore errors
         }
     }
-    // Remove giveaway from the manager's list
+    // Remove giveaway from memory
     manager.giveaways.splice(index, 1);
-    // Save updated data
+    // Save updated file (storage)
     manager.save();
     return true;
 }

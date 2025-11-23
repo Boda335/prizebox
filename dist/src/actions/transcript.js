@@ -154,7 +154,7 @@ function generateHTMLTemplate(data) {
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="icon" type="image/png" href="https://g.top4top.io/p_35557yeku1.png">
+  <link rel="icon" type="image/png" href="https://c.top4top.io/p_3614urdgr1.png">
   <title>🎁 Giveaway Transcript - ${prize}</title>
   <style>
     ${generateStyles()}

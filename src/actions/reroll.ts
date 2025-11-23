@@ -8,11 +8,7 @@ import { TextChannel } from 'discord.js';
  * @param winnerCount Optional number of winners (defaults to the original count)
  * @returns The new winners as an array of participants
  */
-export async function rerollGiveaway(
-  manager: GiveawaysManager,
-  messageId: string,
-  winnerCount?: number
-) {
+export async function rerollGiveaway(manager: GiveawaysManager, messageId: string, winnerCount?: number) {
   // Find the giveaway
   const giveaway = manager.giveaways.find(g => g.data.messageId === messageId);
   if (!giveaway) throw new Error('Giveaway not found');
